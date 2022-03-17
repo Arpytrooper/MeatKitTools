@@ -9,8 +9,8 @@ using OtherLoader;
 [CreateAssetMenu(fileName = "OIDAutoComplete", menuName = "Object IDs/AutoComplete", order = 1)]
 public class OIDAutoComplete : ScriptableObject
 {
-    
 
+    public List<GameObject> ObjectsToID;
     public FVRObject.ObjectCategory Category;
     public AppendType typeOfAppend = OIDAutoComplete.AppendType.No_Custom_String;
     public string customAppend;
@@ -27,7 +27,6 @@ public class OIDAutoComplete : ScriptableObject
     public List<FVRObject.OTagFirearmMount> FirearmMounts;
     public FVRObject.OTagFirearmMount AttachmentMounts;
     public FVRObject.OTagAttachmentFeature AttachmentFeature;
-    public List<GameObject> ObjectsToID;
     [Header("The path Starts with Assets/ and ends with / after the folder location you want the assets to export into")]
     public string ExportLocation;
     [Tooltip("If this bool is checked it will create an FVRObjectID in the folder of the gameobject")]
@@ -44,17 +43,28 @@ public class OIDAutoComplete : ScriptableObject
     public List<string> TutorialBlockIds;
     public bool UsesLargeSpawnPad = false;
     public bool IsReward = false;
+    [Header("Prefab Camera Setup stuff")]
+    public bool setsSprites = false;
+    [Header("This is the path you put in the Icon Camera")]
+    public string PathtoImage;
+
+    // public Camera IconCamera;
+    //[HideInInspector]
+    //public static IconCamera Camera;
+    // public bool TakeIconImages = false;    
+    // public Transform prefabLocation;
     [ContextMenu("AutoFillItemIDs")]
     public void AutoFillItemIDs()
     {
         //Debug.Log("pressed");
         char lastCharOfExportLocation;
         bool isExportLocationValid = false;
-        lastCharOfExportLocation = ExportLocation[ExportLocation.Length - 1];               
+        lastCharOfExportLocation = ExportLocation[ExportLocation.Length - 1];
         if (lastCharOfExportLocation == '/')
         {
             isExportLocationValid = true;
-        } else
+        }
+        else
         {
             isExportLocationValid = false;
             Debug.Log("You need to end your file path with a /");
@@ -63,7 +73,8 @@ public class OIDAutoComplete : ScriptableObject
         {
             foreach (GameObject fillOut in ObjectsToID)
             {
-                string assetPath = AssetDatabase.GetAssetPath(fillOut);
+                fillOutTheID(fillOut);
+                /*string assetPath = AssetDatabase.GetAssetPath(fillOut);
 
                 //string Path = AssetDatabase.GetAssetPath(fillOut) + "OID " + fillOut.name;
                 string Path = ExportLocation + "OID " + fillOut.name + ".asset";
@@ -89,21 +100,22 @@ public class OIDAutoComplete : ScriptableObject
                 IDObject.SpawnedFromId = itemID;
                 IDObject.DisplayName = fillOut.name;
                 IDObject.TagEra = Era;
-                IDObject.TagSet = Set; /*
-            IDObject.TagFirearmSize = FirearmSize;
-            IDObject.TagFirearmAction = FirearmAction;
-            IDObject.TagFirearmRoundPower = RoundPower;
-            IDObject.TagFirearmFirstYear = FirstYear;
-            IDObject.TagFirearmFiringModes = firingMode;
-            IDObject.TagFirearmFeedOption = FeedOptions;
-            IDObject.TagFirearmMounts = FirearmMounts; */
+                IDObject.TagSet = Set;
+                IDObject.TagFirearmSize = FirearmSize;
+                IDObject.TagFirearmAction = FirearmAction;
+                IDObject.TagFirearmRoundPower = RoundPower;
+                IDObject.TagFirearmCountryOfOrigin = CountryOfOrigin;
+                IDObject.TagFirearmFirstYear = FirstYear;
+                IDObject.TagFirearmFiringModes = firingMode;
+                IDObject.TagFirearmFeedOption = FeedOptions;
+                IDObject.TagFirearmMounts = FirearmMounts;
                 IDObject.TagAttachmentMount = AttachmentMounts;
-                IDObject.TagAttachmentFeature = AttachmentFeature;
-                /* IDObject.TagMeleeStyle =
-                   IDObject.TagPowerupType =
-                   IDObject.TagThrownType =
-                   IDObject.TagThrownDamageType = 
-                   IDObject.RoundType = */
+                IDObject.TagAttachmentFeature = AttachmentFeature; /*
+                IDObject.TagMeleeStyle = MeleeStyle;
+                IDObject.TagPowerupType = PowerupType;
+                IDObject.TagThrownType = ThrownType;
+                IDObject.TagThrownDamageType = ThrownDamageType;
+                IDObject.RoundType = RoundType; 
                 if (WillSpawnInTakeAndHold)
                 {
                     IDObject.OSple = true;
@@ -112,10 +124,17 @@ public class OIDAutoComplete : ScriptableObject
                 {
                     IDObject.OSple = false;
                 }
+                 FVRPhysicalObject WrappableObject = fillOut.GetComponent(typeof(FVRPhysicalObject))as FVRPhysicalObject;
+                if (WrappableObject != null)
+                {
+                    WrappableObject.ObjectWrapper = IDObject;
+                }*/
+                    
             }
 
 
         }
+        AssetDatabase.SaveAssets();
     }
     [ContextMenu("FillIDsANDEntries")]
     public void FillIDsANDEntries()
@@ -135,65 +154,72 @@ public class OIDAutoComplete : ScriptableObject
         }
         if (ExportLocation != null && isExportLocationValid)
         {
-            foreach (GameObject fillOut in ObjectsToID)
+            //Camera prefabcam = Instantiate(IconCamera, new Vector3(200, 200, 200), Quaternion.identity);
+            foreach (GameObject fillOut in ObjectsToID)//OID Stuff starts here
             {
-                string assetPath = AssetDatabase.GetAssetPath(fillOut);
+                
+                FVRObject IDObject = fillOutTheID(fillOut);
+                /* string assetPath = AssetDatabase.GetAssetPath(fillOut);
 
-                //string Path = AssetDatabase.GetAssetPath(fillOut) + "OID " + fillOut.name;
+                 //string Path = AssetDatabase.GetAssetPath(fillOut) + "OID " + fillOut.name;
+                 string Path = ExportLocation + "OID " + fillOut.name + ".asset";
+                 string EntryPath = ExportLocation + "ISE " + fillOut.name + ".asset";
+                 // if (!CreateAtObjectLocation)
+                 // {
+                 //      Path = ExportLocation + "OID " + fillOut.name;
+                 //  }
+                 FVRObject IDObject = ScriptableObject.CreateInstance<FVRObject>();
+                 AssetDatabase.CreateAsset(IDObject, Path);
+                 string itemID = fillOut.name;
+                 if (typeOfAppend == AppendType.Suffix)
+                 {
+                     itemID = fillOut.name + "." + customAppend;
+                 }
+                 else if (typeOfAppend == AppendType.Prefix)
+                 {
+                     itemID = customAppend + "." + fillOut.name;
+                 }
+
+                 IDObject.m_anvilPrefab.AssetName = assetPath;
+                 IDObject.Category = Category;
+                 IDObject.ItemID = itemID;
+                 IDObject.SpawnedFromId = itemID;
+                 IDObject.DisplayName = fillOut.name;
+                 IDObject.TagEra = Era;
+                 IDObject.TagSet = Set;a
+                 IDObject.TagFirearmSize = FirearmSize;
+                 IDObject.TagFirearmAction = FirearmAction;
+                 IDObject.TagFirearmRoundPower = RoundPower;
+                 IDObject.TagFirearmCountryOfOrigin = CountryOfOrigin;
+                 IDObject.TagFirearmFirstYear = FirstYear;
+                 IDObject.TagFirearmFiringModes = firingMode;
+                 IDObject.TagFirearmFeedOption = FeedOptions;
+                 IDObject.TagFirearmMounts = FirearmMounts;
+                 IDObject.TagAttachmentMount = AttachmentMounts;
+                 IDObject.TagAttachmentFeature = AttachmentFeature;
+                 /* IDObject.TagMeleeStyle = MeleeStyle;
+                    IDObject.TagPowerupType = PowerupType;
+                    IDObject.TagThrownType = ThrownType;
+                    IDObject.TagThrownDamageType = 
+                    IDObject.RoundType = 
+                 if (WillSpawnInTakeAndHold)
+                 {
+                     IDObject.OSple = true;
+                 }
+                 else
+                 {
+                     IDObject.OSple = false;
+                 }*/
                 string Path = ExportLocation + "OID " + fillOut.name + ".asset";
                 string EntryPath = ExportLocation + "ISE " + fillOut.name + ".asset";
-                // if (!CreateAtObjectLocation)
-                // {
-                //      Path = ExportLocation + "OID " + fillOut.name;
-                //  }
-                FVRObject IDObject = ScriptableObject.CreateInstance<FVRObject>();
-                AssetDatabase.CreateAsset(IDObject, Path);
-                string itemID = fillOut.name;
-                if (typeOfAppend == AppendType.Suffix)
-                {
-                    itemID = fillOut.name + "." + customAppend;
-                }
-                else if (typeOfAppend == AppendType.Prefix)
-                {
-                    itemID = customAppend + "." + fillOut.name;
-                }
-
-                IDObject.m_anvilPrefab.AssetName = assetPath;
-                IDObject.Category = Category;
-                IDObject.ItemID = itemID;
-                IDObject.SpawnedFromId = itemID;
-                IDObject.DisplayName = fillOut.name;
-                IDObject.TagEra = Era;
-                IDObject.TagSet = Set; /*
-            IDObject.TagFirearmSize = FirearmSize;
-            IDObject.TagFirearmAction = FirearmAction;
-            IDObject.TagFirearmRoundPower = RoundPower;
-            IDObject.TagFirearmFirstYear = FirstYear;
-            IDObject.TagFirearmFiringModes = firingMode;
-            IDObject.TagFirearmFeedOption = FeedOptions;
-            IDObject.TagFirearmMounts = FirearmMounts; */
-                IDObject.TagAttachmentMount = AttachmentMounts;
-                IDObject.TagAttachmentFeature = AttachmentFeature;
-                /* IDObject.TagMeleeStyle =
-                   IDObject.TagPowerupType =
-                   IDObject.TagThrownType =
-                   IDObject.TagThrownDamageType = 
-                   IDObject.RoundType = */
-                if (WillSpawnInTakeAndHold)
-                {
-                    IDObject.OSple = true;
-                }
-                else
-                {
-                    IDObject.OSple = false;
-                }
-                ItemSpawnerEntry EntryObject = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
+                ItemSpawnerEntry EntryObject = ScriptableObject.CreateInstance<ItemSpawnerEntry>();//ISID stuff begins here
                 AssetDatabase.CreateAsset(EntryObject, EntryPath);
-                EntryObject.MainObjectID = itemID;
+                EntryObject.MainObjectID = IDObject.ItemID;
                 if (UsesCustomPath)
                 {
                     EntryObject.EntryPath = CustomPath;
-                } else
+                }
+                else
                 {
                     EntryObject.Page = MainCategory;
                     EntryObject.SubCategory = SubCategory;
@@ -203,10 +229,20 @@ public class OIDAutoComplete : ScriptableObject
                 EntryObject.TutorialBlockIDs = TutorialBlockIds;
                 EntryObject.UsesLargeSpawnPad = UsesLargeSpawnPad;
                 EntryObject.IsReward = IsReward;
-            }
+                EntryObject.IsDisplayedInMainEntry = IsDisplayedInMainEntry;
+                string IconPath = "Assets/" + PathtoImage + '/' + fillOut.name + "Sprite" + ".png";
+                EntryObject.EntryIcon = (Sprite)AssetDatabase.LoadAssetAtPath(IconPath, typeof(Sprite));
+                //icon camera stuff begins here
+                /*if (setsSprites)
+                 {                   
+                     EntryObject.EntryIcon = (Sprite)AssetDatabase.LoadAssetAtPath(IconPath, typeof(Sprite));
+                 }*/
 
+            }
+            //Destroy(prefabcam);
 
         }
+        AssetDatabase.SaveAssets();
     }
 
     public enum AppendType
@@ -214,5 +250,64 @@ public class OIDAutoComplete : ScriptableObject
         Suffix = 0,
         Prefix = 1,
         No_Custom_String = 2
+    }
+    public FVRObject fillOutTheID (GameObject fillOut)
+    {
+        string assetPath = AssetDatabase.GetAssetPath(fillOut);
+
+        //string Path = AssetDatabase.GetAssetPath(fillOut) + "OID " + fillOut.name;
+        string Path = ExportLocation + "OID " + fillOut.name + ".asset";
+        // if (!CreateAtObjectLocation)
+        // {
+        //      Path = ExportLocation + "OID " + fillOut.name;
+        //  }
+        FVRObject IDObject = ScriptableObject.CreateInstance<FVRObject>();
+        AssetDatabase.CreateAsset(IDObject, Path);
+        string itemID = fillOut.name;
+        if (typeOfAppend == AppendType.Suffix)
+        {
+            itemID = fillOut.name + "." + customAppend;
+        }
+        else if (typeOfAppend == AppendType.Prefix)
+        {
+            itemID = customAppend + "." + fillOut.name;
+        }
+
+        IDObject.m_anvilPrefab.AssetName = assetPath;
+        IDObject.Category = Category;
+        IDObject.ItemID = itemID;
+        IDObject.SpawnedFromId = itemID;
+        IDObject.DisplayName = fillOut.name;
+        IDObject.TagEra = Era;
+        IDObject.TagSet = Set;
+        IDObject.TagFirearmSize = FirearmSize;
+        IDObject.TagFirearmAction = FirearmAction;
+        IDObject.TagFirearmRoundPower = RoundPower;
+        IDObject.TagFirearmCountryOfOrigin = CountryOfOrigin;
+        IDObject.TagFirearmFirstYear = FirstYear;
+        IDObject.TagFirearmFiringModes = firingMode;
+        IDObject.TagFirearmFeedOption = FeedOptions;
+        IDObject.TagFirearmMounts = FirearmMounts;
+        IDObject.TagAttachmentMount = AttachmentMounts;
+        IDObject.TagAttachmentFeature = AttachmentFeature; /*
+                IDObject.TagMeleeStyle = MeleeStyle;
+                IDObject.TagPowerupType = PowerupType;
+                IDObject.TagThrownType = ThrownType;
+                IDObject.TagThrownDamageType = ThrownDamageType;
+                IDObject.RoundType = RoundType; */
+        if (WillSpawnInTakeAndHold)
+        {
+            IDObject.OSple = true;
+        }
+        else
+        {
+            IDObject.OSple = false;
+        }
+        FVRPhysicalObject WrappableObject = fillOut.GetComponent(typeof(FVRPhysicalObject)) as FVRPhysicalObject;
+        if (WrappableObject != null)
+        {
+            WrappableObject.ObjectWrapper = IDObject;
+        }
+        return IDObject;
     }
 }
