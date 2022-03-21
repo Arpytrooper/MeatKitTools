@@ -129,12 +129,13 @@ public class OIDAutoComplete : ScriptableObject
                 {
                     WrappableObject.ObjectWrapper = IDObject;
                 }*/
-                    
+
             }
 
 
         }
         AssetDatabase.SaveAssets();
+
     }
     [ContextMenu("FillIDsANDEntries")]
     public void FillIDsANDEntries()
@@ -157,7 +158,7 @@ public class OIDAutoComplete : ScriptableObject
             //Camera prefabcam = Instantiate(IconCamera, new Vector3(200, 200, 200), Quaternion.identity);
             foreach (GameObject fillOut in ObjectsToID)//OID Stuff starts here
             {
-                
+
                 FVRObject IDObject = fillOutTheID(fillOut);
                 /* string assetPath = AssetDatabase.GetAssetPath(fillOut);
 
@@ -213,11 +214,15 @@ public class OIDAutoComplete : ScriptableObject
                 string Path = ExportLocation + "OID " + fillOut.name + ".asset";
                 string EntryPath = ExportLocation + "ISE " + fillOut.name + ".asset";
                 ItemSpawnerEntry EntryObject = ScriptableObject.CreateInstance<ItemSpawnerEntry>();//ISID stuff begins here
+
                 AssetDatabase.CreateAsset(EntryObject, EntryPath);
+                EditorUtility.SetDirty(EntryObject);
                 EntryObject.MainObjectID = IDObject.ItemID;
                 if (UsesCustomPath)
                 {
-                    EntryObject.EntryPath = CustomPath;
+                    EntryObject.EntryPath = CustomPath + IDObject.ItemID;
+                    EntryObject.Page = MainCategory;
+                    EntryObject.SubCategory = ItemSpawnerID.ESubCategory.None;
                 }
                 else
                 {
@@ -230,7 +235,7 @@ public class OIDAutoComplete : ScriptableObject
                 EntryObject.UsesLargeSpawnPad = UsesLargeSpawnPad;
                 EntryObject.IsReward = IsReward;
                 EntryObject.IsDisplayedInMainEntry = IsDisplayedInMainEntry;
-                string IconPath = "Assets/" + PathtoImage + '/' + fillOut.name + "Sprite" + ".png";
+                string IconPath = "Assets/" + PathtoImage + '/' + fillOut.name + "_icon" + ".png";
                 EntryObject.EntryIcon = (Sprite)AssetDatabase.LoadAssetAtPath(IconPath, typeof(Sprite));
                 //icon camera stuff begins here
                 /*if (setsSprites)
@@ -243,6 +248,7 @@ public class OIDAutoComplete : ScriptableObject
 
         }
         AssetDatabase.SaveAssets();
+
     }
 
     public enum AppendType
@@ -251,18 +257,18 @@ public class OIDAutoComplete : ScriptableObject
         Prefix = 1,
         No_Custom_String = 2
     }
-    public FVRObject fillOutTheID (GameObject fillOut)
+    public FVRObject fillOutTheID(GameObject fillOut)
     {
         string assetPath = AssetDatabase.GetAssetPath(fillOut);
 
-        //string Path = AssetDatabase.GetAssetPath(fillOut) + "OID " + fillOut.name;
         string Path = ExportLocation + "OID " + fillOut.name + ".asset";
-        // if (!CreateAtObjectLocation)
-        // {
-        //      Path = ExportLocation + "OID " + fillOut.name;
-        //  }
+
         FVRObject IDObject = ScriptableObject.CreateInstance<FVRObject>();
         AssetDatabase.CreateAsset(IDObject, Path);
+        EditorUtility.SetDirty(IDObject);
+
+        //EditorUtility.SetDirty(IDObject);
+
         string itemID = fillOut.name;
         if (typeOfAppend == AppendType.Suffix)
         {
@@ -307,7 +313,12 @@ public class OIDAutoComplete : ScriptableObject
         if (WrappableObject != null)
         {
             WrappableObject.ObjectWrapper = IDObject;
+            EditorUtility.SetDirty(WrappableObject);
         }
+
+
+        
         return IDObject;
+
     }
 }
