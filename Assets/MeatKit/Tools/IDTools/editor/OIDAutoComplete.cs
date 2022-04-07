@@ -143,6 +143,7 @@ public class OIDAutoComplete : ScriptableObject
         //Debug.Log("pressed");
         char lastCharOfExportLocation;
         bool isExportLocationValid = false;
+
         lastCharOfExportLocation = ExportLocation[ExportLocation.Length - 1];
         if (lastCharOfExportLocation == '/')
         {
